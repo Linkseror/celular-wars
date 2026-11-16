@@ -1,0 +1,7 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Exportaciones y credenciales locales (ideal para Itch.io)
+/export/
+export_credentials.cfg
