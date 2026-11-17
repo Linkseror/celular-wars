@@ -5,3 +5,12 @@
 # Exportaciones y credenciales locales (ideal para Itch.io)
 /export/
 export_credentials.cfg
+
+# Python (scripts de assets)
+__pycache__/
+*.pyc
+.venv/
+
+# Sistema
+.DS_Store
+Thumbs.db
