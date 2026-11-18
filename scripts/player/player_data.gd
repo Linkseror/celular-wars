@@ -11,6 +11,16 @@ extends Resource
 ## Multiplicador del arrastre táctil (1 = la nave se mueve lo mismo que el dedo).
 @export var touch_sensitivity: float = 1.0
 
+@export_group("Barrel Roll")
+## Duración de la animación completa de 360° en segundos.
+@export var roll_duration: float = 0.36
+## Tiempo de espera tras terminar el giro antes de poder hacer otro.
+@export var roll_cooldown: float = 0.8
+## Multiplicador de velocidad mientras dura el barrel roll.
+@export var roll_speed_mult: float = 1.45
+## Si es true, la nave esquiva balas y colisiones durante el giro.
+@export var roll_invulnerable: bool = true
+
 @export_group("Escudos")
 ## Escudos al empezar el nivel. Con 0 escudos, el siguiente impacto destruye la nave.
 @export var start_shields: int = 3
