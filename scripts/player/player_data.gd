@@ -6,8 +6,8 @@ extends Resource
 @export var pickup_radius: float = 26.0
 
 @export_group("Movimiento")
-@export var speed: float = 420.0
-@export var focus_speed: float = 180.0
+@export var speed: float = 336.0
+@export var focus_speed: float = 144.0
 ## Multiplicador del arrastre táctil (1 = la nave se mueve lo mismo que el dedo).
 @export var touch_sensitivity: float = 1.0
 
@@ -18,8 +18,10 @@ extends Resource
 @export var roll_cooldown: float = 0.8
 ## Multiplicador de velocidad mientras dura el barrel roll.
 @export var roll_speed_mult: float = 1.45
-## Si es true, la nave esquiva balas y colisiones durante el giro.
-@export var roll_invulnerable: bool = true
+## Radio alrededor de la nave capaz de rebotar el disparo naranja especial.
+@export var roll_deflect_radius: float = 28.0
+## Multiplicador de velocidad del disparo naranja al rebotar.
+@export var roll_reflect_speed_mult: float = 1.6
 
 @export_group("Escudos")
 ## Escudos al empezar el nivel. Con 0 escudos, el siguiente impacto destruye la nave.

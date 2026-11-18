@@ -1,15 +1,19 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/main.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/core/playfield.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/bullets/bullet_manager.gd" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="4"]
+[ext_resource type="Script" path="res://scripts/core/scrolling_background.gd" id="5"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1")
 
 [node name="Playfield" type="Node2D" parent="."]
 script = ExtResource("2")
+
+[node name="ScrollingBackground" type="Node2D" parent="Playfield"]
+script = ExtResource("5")
 
 [node name="Player" parent="Playfield" instance=ExtResource("4")]
 

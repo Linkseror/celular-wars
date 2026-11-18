@@ -26,6 +26,15 @@ extends Resource
 @export var pattern_reforzada: BulletPattern
 @export var pattern_elite: BulletPattern
 
+@export_group("Disparo naranja (Barrel Roll)")
+## Probabilidad (0 a 1) de que un disparo salga naranja brillante rebotable.
+@export_range(0.0, 1.0) var orange_shot_chance: float = 0.28
+## Segundos mínimos entre disparos naranjas en pantalla.
+@export var orange_shot_min_interval: float = 3.5
+@export var orange_shot_speed: float = 190.0
+@export var orange_shot_radius: float = 9.0
+@export var orange_shot_color: Color = Color(1.0, 0.45, 0.05)
+
 
 func pattern_for(rank: TierData.Rank) -> BulletPattern:
 	match rank:

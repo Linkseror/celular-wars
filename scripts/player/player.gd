@@ -10,6 +10,7 @@ signal stars_changed(stars: int, needed: int)
 ## Se emite al recoger la última estrella; quien escucha limpia el escenario.
 signal laser_fired
 signal barrel_roll_started
+signal barrel_roll_deflected
 signal barrel_roll_finished
 signal defeated
 
@@ -28,6 +29,7 @@ var _invuln_left: float = 0.0
 var _roll_time: float = 0.0
 var _roll_cooldown_left: float = 0.0
 var _roll_dir: int = 1
+var _deflect_flash: float = 0.0
 var _touching: bool = false
 
 @onready var sprite: Sprite2D = $Sprite2D
@@ -49,8 +51,16 @@ func is_rolling() -> bool:
 	return _roll_time > 0.0
 
 
+func can_deflect() -> bool:
+	return not health.is_dead() and is_rolling()
+
+
+func roll_cooldown_left() -> float:
+	return _roll_cooldown_left
+
+
 func is_targetable() -> bool:
-	return not health.is_dead() and not health.invulnerable and not (data.roll_invulnerable and is_rolling())
+	return not health.is_dead() and not health.invulnerable
 
 
 func shields() -> int:
@@ -78,6 +88,12 @@ func add_star() -> void:
 		laser_fired.emit()
 
 
+func on_barrel_roll_deflect() -> void:
+	_deflect_flash = 0.2
+	add_star()
+	barrel_roll_deflected.emit()
+
+
 func try_barrel_roll(dir_x: float = 0.0) -> bool:
 	if health.is_dead() or is_rolling() or _roll_cooldown_left > 0.0:
 		return false
@@ -99,6 +115,9 @@ func _physics_process(delta: float) -> void:
 	_move(dir * move_speed * delta)
 	_update_roll(delta)
 	weapon.active = Input.is_action_pressed(&"shoot") or _touching
+
+	if _deflect_flash > 0.0:
+		_deflect_flash = maxf(_deflect_flash - delta, 0.0)
 
 	if _invuln_left > 0.0:
 		_invuln_left -= delta
@@ -176,6 +195,11 @@ func _draw() -> void:
 				Color(0.45, 0.95, 1.0, 0.75), 3.0)
 		draw_arc(Vector2.ZERO, 32.0, start_angle + PI, start_angle + PI * 1.85, 24,
 				Color(0.45, 0.95, 1.0, 0.75), 3.0)
+	# Destello dorado al rebotar un tiro naranja.
+	if _deflect_flash > 0.0:
+		var a := _deflect_flash / 0.2
+		draw_arc(Vector2.ZERO, 36.0 + (1.0 - a) * 14.0, 0.0, TAU, 32,
+				Color(1.0, 0.65, 0.15, a * 0.9), 3.5)
 	if focusing:
 		draw_circle(Vector2.ZERO, data.hitbox_radius + 1.5, Color(1.0, 0.2, 0.3))
 		draw_circle(Vector2.ZERO, data.hitbox_radius, Color.WHITE)

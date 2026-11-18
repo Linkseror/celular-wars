@@ -32,6 +32,5 @@ func _update_layout() -> void:
 
 
 func _draw() -> void:
-	# Marcador provisional del campo hasta que existan los fondos.
-	draw_rect(rect(), Color(0.10, 0.02, 0.06))
+	# Borde del campo; el interior lo rellena ScrollingBackground.
 	draw_rect(rect(), Color(0.45, 0.10, 0.20), false, 2.0)

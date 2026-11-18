@@ -18,6 +18,8 @@ var _rad := PackedFloat32Array()
 var _col := PackedColorArray()
 var _team := PackedByteArray()
 var _dmg := PackedInt32Array()
+var _deflectable := PackedByteArray()
+var _orange_cooldown_left: float = 0.0
 
 
 func _ready() -> void:
@@ -27,13 +29,22 @@ func _ready() -> void:
 	material = mat
 
 
-func spawn(pos: Vector2, vel: Vector2, radius: float, color: Color, team: Team, damage: int = 1) -> void:
+func try_consume_orange_cooldown(min_interval: float) -> bool:
+	if _orange_cooldown_left > 0.0:
+		return false
+	_orange_cooldown_left = min_interval
+	return true
+
+
+func spawn(pos: Vector2, vel: Vector2, radius: float, color: Color, team: Team,
+		damage: int = 1, deflectable: bool = false) -> void:
 	_pos.append(pos)
 	_vel.append(vel)
 	_rad.append(radius)
 	_col.append(color)
 	_team.append(team)
 	_dmg.append(damage)
+	_deflectable.append(1 if deflectable else 0)
 
 
 func count() -> int:
@@ -49,23 +60,45 @@ func clear(team: Team) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _orange_cooldown_left > 0.0:
+		_orange_cooldown_left = maxf(_orange_cooldown_left - delta, 0.0)
 	if _pos.is_empty():
 		return
 	var bounds := field.grow(CULL_MARGIN)
 	var enemies := get_tree().get_nodes_in_group(&"enemies")
 	var target_ok := player != null and player.is_targetable()
+	var deflect_ok := player != null and player.can_deflect()
 	for i in range(_pos.size() - 1, -1, -1):
 		var p := _pos[i] + _vel[i] * delta
 		_pos[i] = p
 		if not bounds.has_point(p):
 			_remove(i)
 		elif _team[i] == Team.ENEMY:
+			if _deflectable[i] == 1 and deflect_ok and _try_deflect_player(i, p):
+				continue
 			if target_ok and _check_player(i, p):
 				_remove(i)
 				target_ok = player.is_targetable()
 		elif _check_enemies(i, p, enemies):
 			_remove(i)
 	queue_redraw()
+
+
+## Solo los tiros naranjas especiales rebotan con el barrel roll y dan una estrella.
+func _try_deflect_player(i: int, p: Vector2) -> bool:
+	var deflect_r := player.data.roll_deflect_radius + _rad[i]
+	if p.distance_squared_to(player.position) > deflect_r * deflect_r:
+		return false
+	_team[i] = Team.PLAYER
+	_deflectable[i] = 0
+	var bounce := -_vel[i] * player.data.roll_reflect_speed_mult
+	if bounce.y > -120.0:
+		bounce = Vector2(bounce.x, -maxf(absf(bounce.y), 240.0))
+	_vel[i] = bounce
+	_dmg[i] = maxi(_dmg[i], 2)
+	_col[i] = Color(1.0, 0.72, 0.15)
+	player.on_barrel_roll_deflect()
+	return true
 
 
 ## Devuelve true si la bala impactó al jugador.
@@ -97,18 +130,26 @@ func _remove(i: int) -> void:
 		_col[i] = _col[last]
 		_team[i] = _team[last]
 		_dmg[i] = _dmg[last]
+		_deflectable[i] = _deflectable[last]
 	_pos.resize(last)
 	_vel.resize(last)
 	_rad.resize(last)
 	_col.resize(last)
 	_team.resize(last)
 	_dmg.resize(last)
+	_deflectable.resize(last)
 
 
 func _draw() -> void:
 	# Dibujo provisional con círculos; se sustituirá por los proyectiles en SVG.
 	for i in _pos.size():
 		var c := _col[i]
-		draw_circle(_pos[i], _rad[i] * 1.8, Color(c, 0.3))
-		draw_circle(_pos[i], _rad[i], c)
-		draw_circle(_pos[i], _rad[i] * 0.45, Color.WHITE)
+		if _deflectable[i] == 1:
+			draw_circle(_pos[i], _rad[i] * 2.3, Color(1.0, 0.45, 0.05, 0.35))
+			draw_arc(_pos[i], _rad[i] * 1.45, 0.0, TAU, 20, Color(1.0, 0.7, 0.2, 0.85), 2.0)
+			draw_circle(_pos[i], _rad[i], c)
+			draw_circle(_pos[i], _rad[i] * 0.5, Color(1.0, 0.95, 0.75))
+		else:
+			draw_circle(_pos[i], _rad[i] * 1.8, Color(c, 0.3))
+			draw_circle(_pos[i], _rad[i], c)
+			draw_circle(_pos[i], _rad[i] * 0.45, Color.WHITE)

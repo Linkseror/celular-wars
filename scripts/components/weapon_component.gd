@@ -12,6 +12,10 @@ signal fired(origin: Vector2)
 var _cooldown: float = 0.0
 
 
+func prime(delay: float) -> void:
+	_cooldown = maxf(delay, 0.0)
+
+
 func _physics_process(delta: float) -> void:
 	if _cooldown > 0.0:
 		_cooldown -= delta
