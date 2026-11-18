@@ -18,7 +18,9 @@ var track_player_speed: float = 0.0
 var _pattern: BulletPattern
 var _origin_x: float
 var _time: float = 0.0
+var _fire_anim_left: float = 0.0
 
+@onready var sprite: Sprite2D = $Sprite2D
 @onready var health: HealthComponent = $HealthComponent
 @onready var hitbox: HitboxComponent = $HitboxComponent
 @onready var weapon: WeaponComponent = $WeaponComponent
@@ -38,6 +40,12 @@ func _ready() -> void:
 	hitbox.radius = data.radius
 	health.died.connect(_on_died)
 	weapon.fired.connect(_on_fired)
+	if sprite:
+		var tex := data.sprite_for(tier.rank)
+		sprite.texture = tex
+		sprite.hframes = max(data.sprite_frames, 1)
+		sprite.frame = 0
+		sprite.modulate = tier.tint
 	_pattern = data.pattern_for(tier.rank)
 	if _pattern:
 		weapon.interval = _pattern.interval
@@ -48,6 +56,10 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_time += delta
+	if _fire_anim_left > 0.0:
+		_fire_anim_left = maxf(_fire_anim_left - delta, 0.0)
+		if _fire_anim_left <= 0.0 and sprite:
+			sprite.frame = 0
 	if track_player_speed > 0.0 and player and not player.health.is_dead():
 		_origin_x = move_toward(_origin_x, player.position.x, track_player_speed * delta)
 	var sway_x := _origin_x + sin(_time * data.sway_frequency * TAU) * data.sway_amplitude
@@ -70,6 +82,9 @@ func _physics_process(delta: float) -> void:
 func _on_fired(_origin: Vector2) -> void:
 	if bullets == null or position.y < field.position.y:
 		return
+	if sprite and sprite.texture != null and sprite.hframes > 1:
+		sprite.frame = 1
+		_fire_anim_left = 0.22
 	var target := player.position if player else position + Vector2.DOWN
 	if data.orange_shot_chance > 0.0 and randf() < data.orange_shot_chance \
 			and bullets.try_consume_orange_cooldown(data.orange_shot_min_interval):
@@ -90,9 +105,10 @@ func _on_died() -> void:
 
 
 func _draw() -> void:
-	# Forma provisional hasta tener sprites y el shader de paleta.
 	var c := data.color * tier.tint
 	if tier.glow_strength > 0.0:
 		draw_circle(Vector2.ZERO, data.radius * 1.5, Color(c, 0.25 * tier.glow_strength))
-	draw_circle(Vector2.ZERO, data.radius, c)
-	draw_circle(Vector2.ZERO, data.radius * 0.4, c.darkened(0.5))
+	if sprite == null or sprite.texture == null:
+		# Forma provisional solo si el arquetipo aún no tiene sprite asignado.
+		draw_circle(Vector2.ZERO, data.radius, c)
+		draw_circle(Vector2.ZERO, data.radius * 0.4, c.darkened(0.5))

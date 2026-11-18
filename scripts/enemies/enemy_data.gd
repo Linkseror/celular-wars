@@ -3,6 +3,9 @@ extends Resource
 ## Arquetipo de enemigo. Hay un archivo .tres por cada uno de los 12.
 
 @export var display_name: String = ""
+@export var sprite_sheet: Texture2D
+@export var sprite_sheet_elite: Texture2D
+@export var sprite_frames: int = 2
 @export var max_hp: int = 3
 ## Velocidad de descenso en píxeles por segundo.
 @export var speed: float = 0.0
@@ -34,6 +37,12 @@ extends Resource
 @export var orange_shot_speed: float = 190.0
 @export var orange_shot_radius: float = 9.0
 @export var orange_shot_color: Color = Color(1.0, 0.45, 0.05)
+
+
+func sprite_for(rank: TierData.Rank) -> Texture2D:
+	if rank == TierData.Rank.ELITE and sprite_sheet_elite != null:
+		return sprite_sheet_elite
+	return sprite_sheet
 
 
 func pattern_for(rank: TierData.Rank) -> BulletPattern:

@@ -1,13 +1,19 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/patterns/bacteriofago_regular.tres" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemy_globulo_regular_sheet.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemy_globulo_elite_sheet.png" id="4"]
 
 [resource]
 script = ExtResource("1")
-display_name = "Bacteriófago Menor"
+display_name = "Hematíe Tecnoviral"
+sprite_sheet = ExtResource("3")
+sprite_sheet_elite = ExtResource("4")
+sprite_frames = 2
 max_hp = 4
 speed = 68.0
+radius = 22.0
 sway_amplitude = 38.0
 sway_frequency = 0.4
 pattern_regular = ExtResource("2")
