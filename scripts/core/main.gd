@@ -237,7 +237,7 @@ func _update_status() -> void:
 	elif player.roll_cooldown_left() > 0.0:
 		roll_text = "%.1fs" % player.roll_cooldown_left()
 
-	var base_hud := "Escudos: %d/%d   Estrellas: %d/%d   [F] Roll: %s" % [
+	var base_hud := "Escudos: %d/%d   Estrellas: %d/%d   [Espacio] Roll: %s" % [
 		player.shields(), player.data.max_shields, player.stars,
 		player.data.stars_for_laser, roll_text]
 

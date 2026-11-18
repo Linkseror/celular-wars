@@ -30,6 +30,8 @@ var _roll_time: float = 0.0
 var _roll_cooldown_left: float = 0.0
 var _roll_dir: int = 1
 var _deflect_flash: float = 0.0
+var _charge_time: float = 0.0
+var _charge_cooldown_left: float = 0.0
 var _touching: bool = false
 
 @onready var sprite: Sprite2D = $Sprite2D
@@ -57,6 +59,10 @@ func can_deflect() -> bool:
 
 func roll_cooldown_left() -> float:
 	return _roll_cooldown_left
+
+
+func charge_ratio() -> float:
+	return clampf(_charge_time / maxf(data.charge_duration, 0.001), 0.0, 1.0)
 
 
 func is_targetable() -> bool:
@@ -114,7 +120,8 @@ func _physics_process(delta: float) -> void:
 		move_speed *= data.roll_speed_mult
 	_move(dir * move_speed * delta)
 	_update_roll(delta)
-	weapon.active = Input.is_action_pressed(&"shoot") or _touching
+	_update_charged_shot(delta)
+	weapon.active = (Input.is_action_pressed(&"shoot") or _touching) and _charge_time <= 0.0
 
 	if _deflect_flash > 0.0:
 		_deflect_flash = maxf(_deflect_flash - delta, 0.0)
@@ -126,6 +133,29 @@ func _physics_process(delta: float) -> void:
 		# Parpadeo mientras dura la invulnerabilidad tras impacto.
 		modulate.a = 1.0 if _invuln_left <= 0.0 or fmod(_invuln_left, 0.2) < 0.1 else 0.3
 	queue_redraw()
+
+
+func _update_charged_shot(delta: float) -> void:
+	if _charge_cooldown_left > 0.0:
+		_charge_cooldown_left = maxf(_charge_cooldown_left - delta, 0.0)
+	if Input.is_action_pressed(&"charged_shoot") and _charge_cooldown_left <= 0.0:
+		_charge_time += delta
+		if _charge_time >= data.charge_duration:
+			_fire_charged_shot()
+			_charge_time = 0.0
+			_charge_cooldown_left = data.charge_cooldown
+	else:
+		_charge_time = 0.0
+
+
+func _fire_charged_shot() -> void:
+	if bullets == null:
+		return
+	# Equivale a 5 disparos completos del arma (2 cañones × shot_damage × 5 = 10).
+	var dmg := data.shot_damage * 2 * data.charged_shot_multiplier
+	bullets.spawn(position + Vector2(0.0, -24.0),
+			Vector2(0.0, -data.charged_shot_speed), data.charged_shot_radius,
+			data.charged_shot_color, BulletManager.Team.PLAYER, dmg)
 
 
 func _update_roll(delta: float) -> void:
@@ -167,6 +197,7 @@ func _on_damaged(_amount: int, current: int) -> void:
 func _on_died() -> void:
 	weapon.active = false
 	_roll_time = 0.0
+	_charge_time = 0.0
 	sprite.frame = 0
 	set_physics_process(false)
 	hide()
@@ -187,6 +218,14 @@ func _draw() -> void:
 	if shields() > 0:
 		draw_arc(Vector2.ZERO, 28.0, 0.0, TAU, 40,
 				Color(0.4, 0.8, 1.0, 0.25 + 0.15 * shields()), 2.0)
+	# Esfera de energía en la proa mientras se carga el tiro con Click Derecho.
+	if _charge_time > 0.0:
+		var ratio := charge_ratio()
+		var nose := Vector2(0.0, -24.0)
+		draw_circle(nose, 4.0 + ratio * 10.0, Color(0.25, 0.95, 1.0, 0.35 + ratio * 0.45))
+		draw_circle(nose, 2.0 + ratio * 5.0, Color(1.0, 1.0, 1.0, 0.85))
+		draw_arc(nose, 18.0 - ratio * 8.0, 0.0, TAU * ratio, 24,
+				Color(0.4, 0.98, 1.0, 0.9), 2.0)
 	# Estela cian giratoria durante el barrel roll.
 	if is_rolling():
 		var progress := 1.0 - (_roll_time / maxf(data.roll_duration, 0.001))

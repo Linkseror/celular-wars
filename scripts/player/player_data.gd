@@ -45,3 +45,14 @@ extends Resource
 ## Separación horizontal de los dos cañones respecto al centro.
 @export var shot_offset: float = 10.0
 @export var shot_color: Color = Color(0.5, 0.85, 1.0)
+
+@export_group("Tiro Cargado (Click Derecho)")
+## Segundos manteniendo click derecho para cargar el disparo.
+@export var charge_duration: float = 0.55
+## Enfriamiento breve tras lanzar un tiro cargado.
+@export var charge_cooldown: float = 0.35
+## Equivalencia en disparos del arma (5 disparos × 2 cañones = 10 de daño).
+@export var charged_shot_multiplier: int = 5
+@export var charged_shot_speed: float = 1050.0
+@export var charged_shot_radius: float = 12.0
+@export var charged_shot_color: Color = Color(0.25, 0.98, 1.0)

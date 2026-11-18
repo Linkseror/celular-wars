@@ -73,9 +73,9 @@ func _on_fired(_origin: Vector2) -> void:
 	var target := player.position if player else position + Vector2.DOWN
 	if data.orange_shot_chance > 0.0 and randf() < data.orange_shot_chance \
 			and bullets.try_consume_orange_cooldown(data.orange_shot_min_interval):
-		var dir := (target - position).normalized()
-		if dir.is_zero_approx():
-			dir = Vector2.DOWN
+		var dir := Vector2.DOWN
+		if _pattern and _pattern.aimed and not target.is_equal_approx(position):
+			dir = (target - position).normalized()
 		bullets.spawn(position, dir * data.orange_shot_speed, data.orange_shot_radius,
 				data.orange_shot_color, BulletManager.Team.ENEMY, 1, true)
 		return
