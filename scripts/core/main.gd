@@ -8,6 +8,7 @@ const SHIELD_PICKUP := preload("res://scenes/pickups/shield_pickup.tscn")
 const STAR_PICKUP := preload("res://scenes/pickups/star_pickup.tscn")
 const TEST_ENEMY: EnemyData = preload("res://resources/enemies/bacteriofago_menor.tres")
 const TEST_TIER: TierData = preload("res://resources/tiers/regular.tres")
+const ELITE_TIER: TierData = preload("res://resources/tiers/elite.tres")
 const LEVEL_BOSS_DATA: BossData = preload("res://resources/bosses/giroscopio_orbital.tres")
 
 const LEVEL_DURATION := 360.0
@@ -149,14 +150,39 @@ func _spawn_boss() -> void:
 	_boss.player = player
 	_boss.field = field
 	_boss.position = Vector2(field.size.x * 0.5, -110.0)
+	_boss.guards_requested.connect(_on_boss_guards_requested)
 	_boss.defeated.connect(_on_boss_defeated)
 	playfield.add_child(_boss)
 	_update_status()
 
 
+## Al llegar el jefe al 50 % de vida aparecen 2 enemigos Élite que orbitan arriba como guardas.
+func _on_boss_guards_requested(_b: Boss) -> void:
+	if player.health.is_dead() or _boss_defeated:
+		return
+	var field := playfield.rect()
+	var half_period := 0.5 / maxf(TEST_ENEMY.elite_orbit_frequency, 0.01)
+	for i in 2:
+		var guard: Enemy = ENEMY_SCENE.instantiate()
+		guard.setup(TEST_ENEMY, ELITE_TIER)
+		guard.bullets = bullets
+		guard.player = player
+		guard.field = field
+		guard.position = Vector2(field.size.x * (0.25 if i == 0 else 0.75), -40.0)
+		guard.sway_phase = 0.0 if i == 0 else half_period
+		guard.orbit_y_override = 128.0 if i == 0 else 156.0
+		guard.initial_fire_delay = 0.6 + i * 0.5
+		guard.defeated.connect(_on_enemy_defeated)
+		playfield.add_child(guard)
+
+
 func _on_boss_defeated(_defeated_boss: Boss) -> void:
 	_boss = null
 	_boss_defeated = true
+	_laser_sweep = true
+	for enemy: Enemy in get_tree().get_nodes_in_group(&"enemies"):
+		enemy.health.take_damage(enemy.health.hp)
+	_laser_sweep = false
 	bullets.clear(BulletManager.Team.ENEMY)
 	_update_status()
 

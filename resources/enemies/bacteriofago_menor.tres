@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_data.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/patterns/bacteriofago_regular.tres" id="2"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemy_globulo_regular_sheet.png" id="3"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemy_globulo_elite_sheet.png" id="4"]
+[ext_resource type="Resource" path="res://resources/patterns/bacteriofago_elite.tres" id="5"]
 
 [resource]
 script = ExtResource("1")
@@ -17,5 +18,14 @@ radius = 22.0
 sway_amplitude = 38.0
 sway_frequency = 0.4
 pattern_regular = ExtResource("2")
+pattern_elite = ExtResource("5")
 orange_shot_chance = 0.3
 orange_shot_min_interval = 3.2
+elite_orbit_y = 138.0
+elite_orbit_amplitude = 250.0
+elite_orbit_frequency = 0.16
+elite_cannon_offset = Vector2(10, 20)
+elite_laser_interval = 4.6
+elite_laser_charge_time = 0.65
+elite_laser_duration = 0.65
+elite_laser_width = 16.0

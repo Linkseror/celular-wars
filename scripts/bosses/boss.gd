@@ -3,11 +3,13 @@ extends Node2D
 ## Jefe circular ("Giroscopio Orbital") con escudos omnidireccionales que alternan
 ## entre estado CERRADO (resistente) y ABIERTO (vulnerable).
 ##
-## Forma parte del grupo `enemies` para que BulletManager colisione los disparos
-## del jugador con su `HitboxComponent` sin duplicar lógica.
+## - Al 50 % de vida solicita 2 guardas de rango Élite (`guards_requested`).
+## - Al 25 % de vida entra en fase crítica: parpadea en rojo y acelera su movimiento y ataque.
 
 signal shield_state_changed(is_open: bool)
 signal hp_changed(current_hp: int, max_hp: int)
+signal guards_requested(boss: Boss)
+signal enraged_started(boss: Boss)
 signal defeated(boss: Boss)
 
 const TRANSITION_WARN_TIME := 0.65
@@ -20,8 +22,11 @@ var field: Rect2
 
 var _entering: bool = true
 var _shields_open: bool = false
+var _guards_spawned: bool = false
+var _was_enraged: bool = false
 var _state_timer: float = 0.0
 var _time: float = 0.0
+var _enrage_blink_time: float = 0.0
 var _origin_x: float = 0.0
 var _armor_fractional_dmg: float = 0.0
 var _hit_flash: float = 0.0
@@ -62,14 +67,14 @@ func _ready() -> void:
 
 func _set_shields_open(open_state: bool) -> void:
 	_shields_open = open_state
-	var mult := 0.8 if is_enraged() else 1.0
+	var mult := 0.68 if is_enraged() else 1.0
 	_state_timer = (data.open_duration if _shields_open else data.closed_duration) * mult
 	if sprite:
 		sprite.frame = 1 if _shields_open else 0
 	var pat := data.pattern_open if _shields_open else data.pattern_closed
 	if pat:
-		weapon.interval = pat.interval * (0.78 if is_enraged() else 1.0)
-		weapon.prime(0.35)
+		weapon.interval = pat.interval * (0.65 if is_enraged() else 1.0)
+		weapon.prime(0.30 if is_enraged() else 0.35)
 		weapon.active = not _entering
 	# Pulso visual de apertura/cierre.
 	if sprite:
@@ -103,17 +108,24 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 		return
 
-	var speed_mult := data.enrage_speed_mult if is_enraged() else 1.0
+	var enraged := is_enraged()
+	var speed_mult := data.enrage_speed_mult if enraged else 1.0
 	_time += delta * speed_mult
 	position.x = _origin_x + sin(_time * data.sway_frequency * TAU) * data.sway_amplitude
 	position.y = data.combat_y + sin(_time * data.sway_frequency * 2.0 * TAU) * 18.0
 
-	# Rotación suave de los escudos en modo cerrado; fijo o oscilante al abrir.
 	if sprite:
 		if not _shields_open:
-			sprite.rotation += delta * (0.55 if not is_enraged() else 0.9)
+			sprite.rotation += delta * (0.55 if not enraged else 1.15)
 		else:
 			sprite.rotation = lerp_angle(sprite.rotation, 0.0, delta * 6.0)
+		# A partir del cuarto de vida parpadea intensamente en rojo.
+		if enraged:
+			_enrage_blink_time += delta * 11.0
+			var pulse := 0.5 + 0.5 * sin(_enrage_blink_time * TAU)
+			sprite.modulate = Color(1.0, 0.22 + 0.65 * pulse, 0.22 + 0.65 * pulse)
+		else:
+			sprite.modulate = Color.WHITE
 
 	_state_timer -= delta
 	if _state_timer <= 0.0:
@@ -145,6 +157,16 @@ func _on_hit_received(amount: int) -> void:
 
 func _on_damaged(_amount: int, current: int) -> void:
 	hp_changed.emit(current, health.max_hp)
+	if not _guards_spawned and current > 0 and float(current) <= float(health.max_hp) * data.guards_hp_ratio:
+		_guards_spawned = true
+		guards_requested.emit(self)
+	if not _was_enraged and current > 0 and is_enraged():
+		_was_enraged = true
+		# Ajusta inmediatamente la cadencia a la fase acelerada.
+		var pat := data.pattern_open if _shields_open else data.pattern_closed
+		if pat:
+			weapon.interval = pat.interval * 0.65
+		enraged_started.emit(self)
 
 
 func _on_fired(_origin: Vector2) -> void:
@@ -155,11 +177,11 @@ func _on_fired(_origin: Vector2) -> void:
 	var pat := data.pattern_open if _shields_open else data.pattern_closed
 	if pat:
 		pat.emit(bullets, position, target)
-		# En estado abierto y furioso añade un anillo defensivo cada 2 ráfagas.
+		# En el último cuarto de vida combina sus abanicos abiertos con anillos defensivos.
 		if _shields_open and is_enraged() and (_burst_counter % 2 == 0) and data.pattern_closed:
 			data.pattern_closed.emit(bullets, position, target)
 
-	# Disparo naranja brillante periódico para que el jugador pueda rebotarlo con Barrel Roll (F).
+	# Disparo naranja brillante periódico para que el jugador pueda rebotarlo con Barrel Roll (Espacio).
 	if data.orange_shot_chance > 0.0 and randf() < data.orange_shot_chance \
 			and bullets.try_consume_orange_cooldown(data.orange_shot_min_interval):
 		var dir := (target - position).normalized()
@@ -182,6 +204,8 @@ func _draw() -> void:
 		# Barrera omnidireccional activa cuando los 4 escudos están cerrados.
 		var pulse_a := 0.35 + (_ring_pulse / 0.16) * 0.45
 		var ring_col := Color(1.0, 0.75, 0.25, pulse_a) if warning else Color(0.35, 0.85, 1.0, pulse_a)
+		if is_enraged() and not warning:
+			ring_col = Color(1.0, 0.3, 0.35, pulse_a + 0.15)
 		draw_arc(Vector2.ZERO, data.radius + 8.0, 0.0, TAU, 48, ring_col, 3.0)
 		draw_circle(Vector2.ZERO, data.radius + 6.0, Color(ring_col.r, ring_col.g, ring_col.b, 0.08))
 	else:

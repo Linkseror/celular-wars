@@ -38,6 +38,24 @@ extends Resource
 @export var orange_shot_radius: float = 9.0
 @export var orange_shot_color: Color = Color(1.0, 0.45, 0.05)
 
+@export_group("Comportamiento Élite (Órbita + Láser de Ojo)")
+## Altura a la que se queda orbitando de izquierda a derecha el enemigo Élite.
+@export var elite_orbit_y: float = 138.0
+## Amplitud horizontal de la órbita de izquierda a derecha.
+@export var elite_orbit_amplitude: float = 250.0
+## Ciclos por segundo de la órbita horizontal.
+@export var elite_orbit_frequency: float = 0.16
+## Desplazamiento de los dos cañones inferiores visibles respecto al centro.
+@export var elite_cannon_offset: Vector2 = Vector2(10.0, 20.0)
+## Segundos entre disparos del láser del ojo central.
+@export var elite_laser_interval: float = 4.6
+## Segundos de preaviso antes de que el ojo central dispare el láser.
+@export var elite_laser_charge_time: float = 0.65
+## Segundos que permanece activo el rayo láser del ojo central.
+@export var elite_laser_duration: float = 0.65
+## Ancho total del láser del ojo central.
+@export var elite_laser_width: float = 16.0
+
 
 func sprite_for(rank: TierData.Rank) -> Texture2D:
 	if rank == TierData.Rank.ELITE and sprite_sheet_elite != null:

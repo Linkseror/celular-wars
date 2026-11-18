@@ -7,13 +7,16 @@ extends Resource
 @export var radius: float = 68.0
 @export var contact_damage: int = 1
 
-@export_group("Movimiento")
+@export_group("Movimiento y Fases")
 @export var entry_speed: float = 140.0
 @export var combat_y: float = 240.0
 @export var sway_amplitude: float = 190.0
 @export var sway_frequency: float = 0.14
-@export var enrage_hp_ratio: float = 0.5
-@export var enrage_speed_mult: float = 1.35
+## Proporción de vida (0.5 = mitad de vida) a la que aparecen los 2 guardas Élite.
+@export var guards_hp_ratio: float = 0.5
+## Proporción de vida (0.25 = cuarto de vida) a partir de la cual parpadea en rojo y acelera.
+@export var enrage_hp_ratio: float = 0.25
+@export var enrage_speed_mult: float = 1.65
 
 @export_group("Escudos Omnidireccionales")
 ## Segundos que permanece con los escudos cerrados (resistente).
