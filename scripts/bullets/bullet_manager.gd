@@ -70,6 +70,8 @@ func _physics_process(delta: float) -> void:
 	var target_ok := player != null and player.is_targetable()
 	var deflect_ok := player != null and player.can_deflect()
 	for i in range(_pos.size() - 1, -1, -1):
+		if i >= _pos.size():
+			continue
 		var p := _pos[i] + _vel[i] * delta
 		_pos[i] = p
 		if not bounds.has_point(p):
@@ -78,10 +80,12 @@ func _physics_process(delta: float) -> void:
 			if _deflectable[i] == 1 and deflect_ok and _try_deflect_player(i, p):
 				continue
 			if target_ok and _check_player(i, p):
-				_remove(i)
+				if i < _pos.size():
+					_remove(i)
 				target_ok = player.is_targetable()
 		elif _check_enemies(i, p, enemies):
-			_remove(i)
+			if i < _pos.size():
+				_remove(i)
 	queue_redraw()
 
 
@@ -98,7 +102,7 @@ func _try_deflect_player(i: int, p: Vector2) -> bool:
 	_vel[i] = bounce
 	_dmg[i] = maxi(_dmg[i], 2)
 	_col[i] = Color(1.0, 0.72, 0.15)
-	player.on_barrel_roll_deflect()
+	player.on_barrel_roll_deflect.call_deferred()
 	return true
 
 
