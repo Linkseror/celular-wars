@@ -66,6 +66,7 @@ func _physics_process(delta: float) -> void:
 		return
 	var bounds := field.grow(CULL_MARGIN)
 	var enemies := get_tree().get_nodes_in_group(&"enemies")
+	enemies.append_array(get_tree().get_nodes_in_group(&"bosses"))
 	var target_ok := player != null and player.is_targetable()
 	var deflect_ok := player != null and player.can_deflect()
 	for i in range(_pos.size() - 1, -1, -1):
@@ -111,10 +112,11 @@ func _check_player(i: int, p: Vector2) -> bool:
 
 
 func _check_enemies(i: int, p: Vector2, enemies: Array[Node]) -> bool:
-	for e: Enemy in enemies:
-		if e.health.is_dead():
+	for node: Node in enemies:
+		var e := node as Node2D
+		if e == null or e.health.is_dead():
 			continue
-		var r := e.hitbox.radius + _rad[i]
+		var r: float = e.hitbox.radius + _rad[i]
 		if p.distance_squared_to(e.position) <= r * r:
 			e.hitbox.hit(_dmg[i])
 			return true

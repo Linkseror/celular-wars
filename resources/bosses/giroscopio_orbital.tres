@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BossData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/bosses/boss_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/patterns/boss_closed_ring.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/patterns/boss_open_fan.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Giroscopio Orbital"
+max_hp = 240
+radius = 68.0
+closed_duration = 5.0
+open_duration = 4.5
+closed_damage_mult = 0.25
+laser_damage = 45
+pattern_closed = ExtResource("2")
+pattern_open = ExtResource("3")
+orange_shot_chance = 0.42
+orange_shot_min_interval = 2.4
